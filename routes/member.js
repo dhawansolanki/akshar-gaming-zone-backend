@@ -13,6 +13,8 @@ const db = dbConnection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 const memberSchema = new mongoose.Schema({
+  orderId: String,
+  userId: String,
   phoneNo: String,
   emailId: String,
   name: String,
@@ -35,12 +37,13 @@ const Member = db.model("Member", memberSchema);
 
 router.post("/", async (req, res) => {
   try {
-    const { members, agreeToTerms } = req.body;
+    const { members, agreeToTerms, orderId } = req.body;
 
     console.log("Received data:", req.body);
 
     const newMembers = members.map((member) => ({
       ...member,
+      orderId,
       agreeToTerms,
     }));
 

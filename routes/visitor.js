@@ -12,6 +12,8 @@ const db = dbConnection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 const visitorSchema = new mongoose.Schema({
+  orderId: String,
+  userId: String,
   phoneNo: String,
   emailId: String,
   name: String,
@@ -31,43 +33,17 @@ const Visitor = db.model("Visitor", visitorSchema);
 
 router.post("/", async (req, res) => {
   try {
-    const { visitors, agreeToTerms } = req.body;
+    const { visitors, agreeToTerms, orderId } = req.body;
 
     console.log("Received data:", req.body);
 
-    // Iterate over each group of visitors
-    for (const group of visitors) {
-      // Iterate over each visitor in the group
-      for (const visitor of group) {
-        const {
-          phoneNo,
-          emailId,
-          name,
-          addressLine1,
-          addressLine2,
-          addressLine3,
-          dob,
-          anniversaryDate,
-          game,
-        } = visitor;
+    const newVisitors = visitors.map((visitor) => ({
+      ...visitor,
+      orderId,
+      agreeToTerms,
+    }));
 
-        const newVisitor = new Visitor({
-          phoneNo,
-          emailId,
-          name,
-          address: {
-            line1: addressLine1,
-            line2: addressLine2,
-            line3: addressLine3,
-          },
-          dob,
-          anniversaryDate,
-          game,
-        });
-
-        await newVisitor.save();
-      }
-    }
+    await Visitor.insertMany(newVisitors);
 
     res.sendStatus(200);
   } catch (error) {
