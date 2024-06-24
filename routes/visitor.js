@@ -59,4 +59,44 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Endpoint to fetch visitor details by phone number
+router.get("/:phoneNo", async (req, res) => {
+  const { phoneNo } = req.params;
+  try {
+    const visitor = await Visitor.findOne({ phoneNo });
+
+    if (!visitor) {
+      return res.status(404).json({ message: "Visitor not found" });
+    }
+
+    // Format DOB to yyyy-mm-dd
+    const formattedDOB = formatDate(visitor.dob);
+    
+    // Format Anniversary Date to yyyy-mm-dd
+    const formattedAnniversaryDate = formatDate(visitor.anniversaryDate);
+
+    // Prepare visitor data to send to frontend
+    const formattedVisitor = {
+      ...visitor.toObject(),  // Convert Mongoose document to plain JavaScript object
+      dob: formattedDOB,      // Replace original DOB with formatted DOB
+      anniversaryDate: formattedAnniversaryDate  // Replace original anniversaryDate with formatted anniversaryDate
+    };
+
+    res.status(200).json(formattedVisitor);
+  } catch (error) {
+    console.error("Error fetching visitor:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// Helper function to format date to yyyy-mm-dd
+function formatDate(date) {
+  if (!date) return null;
+  
+  const year = date.getFullYear();
+  let month = (1 + date.getMonth()).toString().padStart(2, '0');
+  let day = date.getDate().toString().padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
 module.exports = router;

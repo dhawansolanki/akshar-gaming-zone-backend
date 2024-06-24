@@ -63,4 +63,42 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Endpoint to fetch member details by phone number
+router.get("/:phoneNo", async (req, res) => {
+  const { phoneNo } = req.params;
+  try {
+    const member = await Member.findOne({ phoneNo });
+
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    // Format DOB to dd/mm/yyyy
+    const formattedDOB = member.dob.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
+    // Format Anniversary Date to dd/mm/yyyy
+    const formattedAnniversaryDate = member.anniversaryDate.toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
+    // Prepare member data to send to frontend
+    const formattedMember = {
+      ...member.toObject(),  // Convert Mongoose document to plain JavaScript object
+      dob: formattedDOB,      // Replace original DOB with formatted DOB
+      anniversaryDate: formattedAnniversaryDate  // Replace original anniversaryDate with formatted anniversaryDate
+    };
+
+    res.status(200).json(formattedMember);
+  } catch (error) {
+    console.error("Error fetching member:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = router;
