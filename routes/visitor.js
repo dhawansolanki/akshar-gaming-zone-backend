@@ -17,15 +17,12 @@ const visitorSchema = new mongoose.Schema({
   phoneNo: String,
   emailId: String,
   name: String,
-  address: {
-    line1: String,
-    line2: String,
-    line3: String,
-  },
+  addressLine1: String,
+  addressLine2: String,
+  addressLine3: String,
   dob: Date,
   anniversaryDate: Date,
   game: String,
-  table: Number,
   agreeToTerms: Boolean,
 });
 
