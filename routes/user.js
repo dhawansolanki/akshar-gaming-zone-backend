@@ -101,10 +101,10 @@ router.post("/login", async (req, res) => {
       if (!isMatch) {
         return res.status(400).json({ error: "Invalid credentials" });
       }
-
+      const userId = user.id;
       const payload = {
         user: {
-          id: user.id,
+          id: userId,
         },
       };
   
@@ -114,7 +114,7 @@ router.post("/login", async (req, res) => {
         { expiresIn: "1d" },
         (err, token) => {
           if (err) throw err;
-          res.json({ token });
+          res.json({ userId, identifier, token });
         }
       );
     } catch (error) {
