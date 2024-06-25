@@ -109,7 +109,7 @@ router.post("/login", async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
-    const userId = user.id;
+    const userId = user.userId;
     const payload = {
       user: {
         id: userId,
@@ -136,7 +136,7 @@ router.post("/login", async (req, res) => {
 router.get("/:userId", async (req, res) => {
     const { userId } = req.params;
     try {
-      const user = await User.findOne({ userId: userId});
+      const user = await User.findOne({ userId});
   
       if (!user) {
         return res.status(404).json({ message: "User not found" });
