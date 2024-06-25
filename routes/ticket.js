@@ -13,11 +13,22 @@ const db = dbConnection;
 db.on("error", console.error.bind(console, "MongoDB connection error:"));
 
 const memberSchema = new mongoose.Schema({
+  orderId: String,
   userId: String,
   parentId: String,
   phoneNo: String,
   emailId: String,
   name: String,
+  addressLine1: String,
+  addressLine2: String,
+  addressLine3: String,
+  dob: Date,
+  anniversaryDate: Date,
+  idProof: String,
+  idNumber: String,
+  game: String,
+  timeSlot: String,
+  agreeToTerms: Boolean,
 });
 
 const Member = db.model("Member", memberSchema);
