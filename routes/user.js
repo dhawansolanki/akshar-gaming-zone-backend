@@ -143,14 +143,14 @@ router.get("/:userId", async (req, res) => {
       }
   
       // Format DOB to dd/mm/yyyy
-      const formattedDOB = user.dob.toLocaleDateString('en-GB', {
+      const formattedDOB = user?.dob?.toLocaleDateString('en-GB', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
       });
   
       // Format Anniversary Date to dd/mm/yyyy
-      const formattedAnniversaryDate = user.anniversaryDate.toLocaleDateString('en-GB', {
+      const formattedAnniversaryDate = user?.anniversaryDate?.toLocaleDateString('en-GB', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
