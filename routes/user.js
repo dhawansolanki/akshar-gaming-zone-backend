@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const router = express.Router();
-require('dotenv').config();
+require("dotenv").config();
 const jwt = require("jsonwebtoken");
 
 mongoose.connect(
@@ -24,12 +24,14 @@ const userSchema = new mongoose.Schema({
   name: String,
   phoneNo: { type: String, unique: true, required: true },
   emailId: { type: String, unique: true, required: true },
+  password: String,
   addressLine1: String,
   addressLine2: String,
   addressLine3: String,
   dob: Date,
   anniversaryDate: Date,
-  password: String,
+  idProof: String,
+  idNumber: String,
 });
 
 // Hash password before saving
@@ -51,12 +53,14 @@ router.post("/signup", async (req, res) => {
       name,
       phoneNo,
       emailId,
+      password,
       addressLine1,
       addressLine2,
       addressLine3,
       dob,
       anniversaryDate,
-      password,
+      idProof,
+      idNumber,
     } = req.body;
 
     const newUser = new User({
@@ -64,12 +68,14 @@ router.post("/signup", async (req, res) => {
       name,
       phoneNo,
       emailId,
+      password,
       addressLine1,
       addressLine2,
       addressLine3,
       dob,
       anniversaryDate,
-      password,
+      idProof,
+      idNumber,
     });
 
     await newUser.save();
@@ -78,7 +84,9 @@ router.post("/signup", async (req, res) => {
   } catch (error) {
     if (error.code === 11000) {
       // MongoDB duplicate key error
-      return res.status(400).json({ error: "Phone number or email already exists" });
+      return res
+        .status(400)
+        .json({ error: "Phone number or email already exists" });
     }
     console.error("Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -86,40 +94,40 @@ router.post("/signup", async (req, res) => {
 });
 
 router.post("/login", async (req, res) => {
-    const { identifier, password } = req.body;
-  
-    try {
-      // Check if user exists with email or phone number
-      const user = await User.findOne({
-        $or: [{ emailId: identifier }, { phoneNo: identifier }],
-      });
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
+  const { identifier, password } = req.body;
 
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ error: "Invalid credentials" });
-      }
-      const userId = user.id;
-      const payload = {
-        user: {
-          id: userId,
-        },
-      };
-  
-      jwt.sign(
-        payload,
-        process.env.JWT_SECRET,
-        { expiresIn: "1d" },
-        (err, token) => {
-          if (err) throw err;
-          res.json({ userId, identifier, token });
-        }
-      );
-    } catch (error) {
-      console.error("Error:", error);
-      res.status(500).json({ error: "Internal Server Error" });
+  try {
+    // Check if user exists with email or phone number
+    const user = await User.findOne({
+      $or: [{ emailId: identifier }, { phoneNo: identifier }],
+    });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
-  });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+    const userId = user.id;
+    const payload = {
+      user: {
+        id: userId,
+      },
+    };
+
+    jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" },
+      (err, token) => {
+        if (err) throw err;
+        res.json({ userId, identifier, token });
+      }
+    );
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 module.exports = router;
