@@ -130,4 +130,44 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+
+// Endpoint to fetch user details by phone number
+router.get("/:userId", async (req, res) => {
+    const { userId } = req.params;
+    try {
+      const user = await User.findOne({ userId});
+  
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      // Format DOB to dd/mm/yyyy
+      const formattedDOB = user.dob.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+  
+      // Format Anniversary Date to dd/mm/yyyy
+      const formattedAnniversaryDate = user.anniversaryDate.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+  
+      // Prepare user data to send to frontend
+      const formattedUser = {
+        ...user.toObject(),  // Convert Mongoose document to plain JavaScript object
+        dob: formattedDOB,      // Replace original DOB with formatted DOB
+        anniversaryDate: formattedAnniversaryDate  // Replace original anniversaryDate with formatted anniversaryDate
+      };
+  
+      res.status(200).json(formattedUser);
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+  
 module.exports = router;
