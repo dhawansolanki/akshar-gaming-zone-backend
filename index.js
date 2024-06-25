@@ -31,9 +31,10 @@ app.get("/", (request, response) => {
 
 const visitorRoute = require("./routes/visitor")
 const memberRoute = require("./routes/member")
-
+const userRoute = require("./routes/user")
 app.use("/visitor",visitorRoute);
 app.use("/member",memberRoute);
+app.use("/user", userRoute)
 
 app.listen(port, () => {
   console.log(`App running on port ${port}.`);
