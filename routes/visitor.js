@@ -24,7 +24,7 @@ const visitorSchema = new mongoose.Schema({
   anniversaryDate: Date,
   game: String,
   agreeToTerms: Boolean,
-  totalPrice: Number
+  totalPrice: Number,
 });
 
 const Visitor = db.model("Visitor", visitorSchema);
@@ -39,7 +39,7 @@ router.post("/", async (req, res) => {
       ...visitor,
       orderId,
       agreeToTerms,
-      totalPrice
+      totalPrice,
     }));
 
     await Visitor.insertMany(newVisitors);
@@ -73,15 +73,15 @@ router.get("/:phoneNo", async (req, res) => {
 
     // Format DOB to yyyy-mm-dd
     const formattedDOB = formatDate(visitor.dob);
-    
+
     // Format Anniversary Date to yyyy-mm-dd
     const formattedAnniversaryDate = formatDate(visitor.anniversaryDate);
 
     // Prepare visitor data to send to frontend
     const formattedVisitor = {
-      ...visitor.toObject(),  // Convert Mongoose document to plain JavaScript object
-      dob: formattedDOB,      // Replace original DOB with formatted DOB
-      anniversaryDate: formattedAnniversaryDate  // Replace original anniversaryDate with formatted anniversaryDate
+      ...visitor.toObject(), // Convert Mongoose document to plain JavaScript object
+      dob: formattedDOB, // Replace original DOB with formatted DOB
+      anniversaryDate: formattedAnniversaryDate, // Replace original anniversaryDate with formatted anniversaryDate
     };
 
     res.status(200).json(formattedVisitor);
@@ -91,14 +91,28 @@ router.get("/:phoneNo", async (req, res) => {
   }
 });
 
+router.post("/payment/:orderId", async (req, res) => {
+  const { orderId } = req.params;
+  try {
+    const visitor = await Visitor.findOne({ orderId: orderId });
+    if (!visitor) {
+      return res.status(404).json({ message: "Visitor not found" });
+    }
+    res.status(200).json(visitor);
+  } catch (error) {
+    console.error("Error fetching visitor:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 // Helper function to format date to yyyy-mm-dd
 function formatDate(date) {
   if (!date) return null;
-  
+
   const year = date.getFullYear();
-  let month = (1 + date.getMonth()).toString().padStart(2, '0');
-  let day = date.getDate().toString().padStart(2, '0');
-  
+  let month = (1 + date.getMonth()).toString().padStart(2, "0");
+  let day = date.getDate().toString().padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 }
 module.exports = router;
