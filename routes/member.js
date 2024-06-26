@@ -92,10 +92,10 @@ router.get("/:phoneNo", async (req, res) => {
   }
 });
 
-router.get("/family", async (req, res) => {
+router.post("/group", async (req, res) => {
   try {
-    const { parentId } = req.query;
-    const children = await Member.find({ parentId });
+    const {parentId} = req.body;
+    const children = await Member.find({ parentId});
     res.json(children);
   } catch (error) {
     console.error("Error fetching children:", error);
