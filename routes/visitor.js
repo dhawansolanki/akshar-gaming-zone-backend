@@ -24,13 +24,14 @@ const visitorSchema = new mongoose.Schema({
   anniversaryDate: Date,
   game: String,
   agreeToTerms: Boolean,
+  totalPrice: Number
 });
 
 const Visitor = db.model("Visitor", visitorSchema);
 
 router.post("/", async (req, res) => {
   try {
-    const { visitors, agreeToTerms, orderId } = req.body;
+    const { visitors, agreeToTerms, orderId, totalPrice } = req.body;
 
     console.log("Received data:", req.body);
 
@@ -38,6 +39,7 @@ router.post("/", async (req, res) => {
       ...visitor,
       orderId,
       agreeToTerms,
+      totalPrice
     }));
 
     await Visitor.insertMany(newVisitors);
