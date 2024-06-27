@@ -126,6 +126,18 @@ router.post("/check-availability", async (req, res) => {
     const startDateTime = new Date();
     startDateTime.setHours(startHour, startMinute, 0, 0);
 
+    const gameOptions = [
+      { name: "Air Hockey", duration: 15 },
+      { name: "Box Cricket", duration: 20 },
+      { name: "Carrom", duration: 60 },
+      { name: "Chess", duration: 60 },
+      { name: "Ludo", duration: 60 },
+      { name: "Pool", duration: 60 },
+      { name: "Snakes & Ladders", duration: 60 },
+      { name: "Table Tennis", duration: 60 },
+    ];
+
+    // Find the game option by name
     const gameOption = gameOptions.find((option) => option.name === game);
 
     if (!gameOption) {
@@ -135,22 +147,41 @@ router.post("/check-availability", async (req, res) => {
     const endDateTime = new Date(startDateTime);
     endDateTime.setMinutes(startDateTime.getMinutes() + gameOption.duration);
 
+    // Format startDateTime and endDateTime to hh:mm
+    const formattedStartTime = formatTime(startDateTime);
+    const formattedEndTime = formatTime(endDateTime);
+
+    // Check for overlapping bookings
     const overlappingBooking = await Visitor.findOne({
       game,
-      startTime: { $lt: endDateTime },
-      endTime: { $gt: startDateTime },
+      // startTime: { $lt: endDateTime },
+      startTime: { $lt: formattedEndTime },
+      // endTime: { $gt: startDateTime },
+      endTime: { $gt: formattedStartTime },
     });
-
     if (overlappingBooking) {
       return res.status(409).json({ error: "Time slot not available" });
     }
 
-    res.status(200).json({ message: "Time slot available" });
+    res
+      .status(200)
+      .json({
+        message: "Time slot available",
+        startTime: formattedStartTime,
+        endTime: formattedEndTime,
+      });
   } catch (error) {
     console.error("Error checking availability:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+// Helper function to format date to hh:mm
+function formatTime(dateTime) {
+  const hours = dateTime.getHours().toString().padStart(2, "0");
+  const minutes = dateTime.getMinutes().toString().padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
 
 router.get("/available-slots/:game", async (req, res) => {
   const { game } = req.params;
@@ -185,7 +216,9 @@ router.get("/available-slots/:game", async (req, res) => {
 
         lastEndTime = new Date(booking.endTime);
       } else {
-        lastEndTime = new Date(Math.max(lastEndTime.getTime(), booking.endTime.getTime()));
+        lastEndTime = new Date(
+          Math.max(lastEndTime.getTime(), booking.endTime.getTime())
+        );
       }
     });
 
