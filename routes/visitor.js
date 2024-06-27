@@ -23,6 +23,8 @@ const visitorSchema = new mongoose.Schema({
   dob: Date,
   anniversaryDate: Date,
   game: String,
+  startTime: TimeRanges,
+  endTime: TimeRanges,
   agreeToTerms: Boolean,
   totalPrice: Number,
 });
@@ -115,4 +117,89 @@ function formatDate(date) {
 
   return `${year}-${month}-${day}`;
 }
+
+router.post("/check-availability", async (req, res) => {
+  const { game, startTime } = req.body;
+
+  try {
+    const [startHour, startMinute] = startTime.split(":").map(Number);
+    const startDateTime = new Date();
+    startDateTime.setHours(startHour, startMinute, 0, 0);
+
+    const gameOption = gameOptions.find((option) => option.name === game);
+
+    if (!gameOption) {
+      return res.status(400).json({ error: "Invalid game selected" });
+    }
+
+    const endDateTime = new Date(startDateTime);
+    endDateTime.setMinutes(startDateTime.getMinutes() + gameOption.duration);
+
+    const overlappingBooking = await Visitor.findOne({
+      game,
+      startTime: { $lt: endDateTime },
+      endTime: { $gt: startDateTime },
+    });
+
+    if (overlappingBooking) {
+      return res.status(409).json({ error: "Time slot not available" });
+    }
+
+    res.status(200).json({ message: "Time slot available" });
+  } catch (error) {
+    console.error("Error checking availability:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+router.get("/available-slots/:game", async (req, res) => {
+  const { game } = req.params;
+
+  try {
+    const gameOption = gameOptions.find((option) => option.name === game);
+
+    if (!gameOption) {
+      return res.status(400).json({ error: "Invalid game selected" });
+    }
+
+    const allBookings = await Visitor.find({ game }).sort({ startTime: 1 });
+
+    const availableSlots = [];
+    const openingTime = new Date();
+    openingTime.setHours(10, 0, 0, 0); // Assuming opening time is 10:00 AM
+
+    const closingTime = new Date(openingTime);
+    closingTime.setHours(22, 0, 0, 0); // Assuming closing time is 10:00 PM
+
+    let lastEndTime = openingTime;
+
+    allBookings.forEach((booking) => {
+      if (booking.startTime > lastEndTime) {
+        const slotStartTime = new Date(lastEndTime);
+        const slotEndTime = new Date(booking.startTime);
+
+        availableSlots.push({
+          startTime: slotStartTime,
+          endTime: slotEndTime,
+        });
+
+        lastEndTime = new Date(booking.endTime);
+      } else {
+        lastEndTime = new Date(Math.max(lastEndTime.getTime(), booking.endTime.getTime()));
+      }
+    });
+
+    if (lastEndTime < closingTime) {
+      availableSlots.push({
+        startTime: lastEndTime,
+        endTime: closingTime,
+      });
+    }
+
+    res.status(200).json(availableSlots);
+  } catch (error) {
+    console.error("Error fetching available slots:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 module.exports = router;
