@@ -23,8 +23,8 @@ const visitorSchema = new mongoose.Schema({
   dob: Date,
   anniversaryDate: Date,
   game: String,
-  startTime: TimeRanges,
-  endTime: TimeRanges,
+  startTime: Date,
+  endTime: Date,
   agreeToTerms: Boolean,
   totalPrice: Number,
 });
