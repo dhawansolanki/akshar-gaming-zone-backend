@@ -28,6 +28,10 @@ const visitorSchema = new mongoose.Schema({
   endTime: String,
   agreeToTerms: Boolean,
   totalPrice: Number,
+  razorpay_order_id: String,
+  razorpay_payment_id: String,
+  razorpay_signature: String,
+  status: String,
 });
 
 const Visitor = db.model("Visitor", visitorSchema);
@@ -164,13 +168,11 @@ router.post("/check-availability", async (req, res) => {
       return res.status(409).json({ error: "Time slot not available" });
     }
 
-    res
-      .status(200)
-      .json({
-        message: "Time slot available",
-        startTime: formattedStartTime,
-        endTime: formattedEndTime,
-      });
+    res.status(200).json({
+      message: "Time slot available",
+      startTime: formattedStartTime,
+      endTime: formattedEndTime,
+    });
   } catch (error) {
     console.error("Error checking availability:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -236,4 +238,37 @@ router.get("/available-slots/:game", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
+router.post("/payment/verify/update", async (req, res) => {
+  try {
+    const {
+      orderId,
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+    } = req.body;
+
+    // Find all visitors with the given orderId
+    const visitors = await Visitor.find({ orderId: orderId });
+
+    if (!visitors || visitors.length === 0) {
+      return res.status(400).json({ error: "Visitors not found for orderId" });
+    }
+
+    // Update each visitor with payment details
+    for (let visitor of visitors) {
+      visitor.razorpay_order_id = razorpay_order_id;
+      visitor.razorpay_payment_id = razorpay_payment_id;
+      visitor.razorpay_signature = razorpay_signature;
+      visitor.status = "PAID";
+      await visitor.save(); // Save each visitor individually
+    }
+
+    res.status(200).json({ message: "Payment successful" });
+  } catch (error) {
+    console.error("Error updating visitors' payment status:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = router;
