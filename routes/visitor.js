@@ -22,6 +22,7 @@ const visitorSchema = new mongoose.Schema({
   addressLine3: String,
   dob: Date,
   anniversaryDate: Date,
+  date: Date,
   game: String,
   startTime: String,
   endTime: String,
@@ -137,6 +138,18 @@ router.post("/check-availability", async (req, res) => {
       { name: "Table Tennis", duration: 60 },
     ];
 
+    // Set today's date for filtering
+    const today = new Date();
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      0,
+      0,
+      0
+    );
+    const endOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+
     // Find the game option by name
     const gameOption = gameOptions.find((option) => option.name === game);
 
@@ -151,12 +164,11 @@ router.post("/check-availability", async (req, res) => {
     const formattedStartTime = formatTime(startDateTime);
     const formattedEndTime = formatTime(endDateTime);
 
-    // Check for overlapping bookings
+    // Check for overlapping bookings for today's date only
     const overlappingBooking = await Visitor.findOne({
       game,
-      // startTime: { $lt: endDateTime },
+      date: { $gte: startOfToday, $lte: endOfToday },
       startTime: { $lt: formattedEndTime },
-      // endTime: { $gt: startDateTime },
       endTime: { $gt: formattedStartTime },
     });
     if (overlappingBooking) {
