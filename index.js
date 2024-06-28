@@ -32,10 +32,11 @@ app.get("/", (request, response) => {
 const visitorRoute = require("./routes/visitor")
 const memberRoute = require("./routes/member")
 const userRoute = require("./routes/user")
+const razorpayRoute = require("./routes/razorpay")
 app.use("/visitor",visitorRoute);
 app.use("/member",memberRoute);
-app.use("/user", userRoute)
-
+app.use("/user", userRoute);
+app.use("/razorpay", razorpayRoute);
 app.listen(port, () => {
   console.log(`App running on port ${port}.`);
 });
